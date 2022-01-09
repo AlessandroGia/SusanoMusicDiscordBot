@@ -82,9 +82,9 @@ class Susano(commands.Cog):
             )
         ]
     )
-    async def _play(self, ctx: SlashContext, song: str) -> None:
+    async def _play(self, ctx: SlashContext, input: str) -> None:
         try:
-            await self.voiceChannel.play(ctx, song, self.coda)
+            await self.voiceChannel.play(ctx, input, self.coda)
         except Exc.UserNonConnessoError:
             await ctx.send(embed=self.embed("Non sei connesso a nessun canale vocale", self.red))
         except Exc.BotNonPresenteError:
