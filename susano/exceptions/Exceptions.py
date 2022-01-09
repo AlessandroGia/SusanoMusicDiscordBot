@@ -5,5 +5,6 @@ from .BotPresenteError import BotPresenteError
 from .CanzoniNonInCodaError import CanzoniNonInCodaError
 from .UserNonConnessoError import UserNonConnessoError
 from .UserNonNelloStessoCanaleError import UserNonNelloStessoCanaleError
-from .CodaVuota import CodaVuota
-
+from .CodaVuotaError import CodaVuotaError
+from .NessunaCanzoneError import NessunaCanzoneError
+from .LoopGiaImpostatoError import LoopGiaImpostatoError

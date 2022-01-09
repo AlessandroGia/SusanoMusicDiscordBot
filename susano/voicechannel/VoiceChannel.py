@@ -1,3 +1,4 @@
+import youtube_dl
 from discord import FFmpegOpusAudio
 from discord.ext import commands
 from discord.ext import tasks
@@ -55,14 +56,18 @@ class VoiceChannel:
         if not ctx.author.voice.channel == ctx.voice_client.channel:
             raise Exc.UserNonNelloStessoCanaleError
 
-    @staticmethod
-    def __search(link: str) -> [dict, str]:
+    def __search(self, link: str) -> [dict, str]:
         with YoutubeDL({'format': 'bestaudio', 'noplaylist': 'true'}) as ydl:
             try:
                 requests.get(link)
+            except youtube_dl.DownloadError as error:
+                print(1)
+                print(error)
             except:
+                print(2)
                 info = ydl.extract_info(f"ytsearch:{link}", download=False)['entries'][0]
             else:
+                print(3)
                 info = ydl.extract_info(link, download=False)
 
         return info
@@ -127,7 +132,7 @@ class VoiceChannel:
             coda.put(idg, url)
 
     async def playerhandler(self, ctx: SlashContext, vc: discord.VoiceClient, coda: Coda, idg: int) -> None:
-        while not coda.isEmpty(idg):
+        while not coda.isEmpty(idg) or coda.getLoop(idg):
             url = coda.get(idg)
             info = self.__search(url)
             await ctx.send(embed=self.__inRiproduzione(info['title']))
@@ -166,8 +171,20 @@ class VoiceChannel:
 
         vc, idg = self.__init(ctx)
 
-        if coda.isEmpty(idg):
-            raise Exc.CodaVuota
+        if coda.isEmpty(idg) and not (vc.is_playing() or vc.is_paused()):
+            raise Exc.CodaVuotaError
 
         coda.clear(idg)
         vc.stop()
+
+    async def loop(self, ctx: SlashContext, input: bool, coda: Coda) -> None:
+
+        vc, idg = self.__init(ctx)
+
+        if coda.isEmpty(idg) and not (vc.is_playing() or vc.is_paused()):
+            raise Exc.NessunaCanzoneError
+
+        if input == coda.getLoop(idg):
+            raise Exc.LoopGiaImpostatoError
+
+        coda.setLoop(idg, input)

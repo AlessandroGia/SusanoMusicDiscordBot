@@ -2,7 +2,7 @@ from susano.voicechannel.VoiceChannel import VoiceChannel
 from susano.voicechannel.Coda import Coda
 from susano.servers.Servers import Servers
 from discord_slash import cog_ext, SlashContext
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_commands import create_option, create_choice
 from discord.ext import commands
 
 import susano.exceptions.Exceptions as Exc
@@ -45,8 +45,8 @@ class Susano(commands.Cog):
         except Exc.BotPresenteError:
             await ctx.send(embed=self.embed("Il bot e' gia presente nel canale vocale", self.red))
         except Exception as e:
-            await ctx.send(embed=self.embed("Si e' verificato un errore", self.red))
-            print(e.args)
+            await ctx.send(embed=self.embed(str(e), self.red))
+
 
     # Leave
     @cog_ext.cog_slash(
@@ -92,7 +92,9 @@ class Susano(commands.Cog):
         except Exc.UserNonNelloStessoCanaleError:
             await ctx.send(embed=self.embed("Non sei connesso nello stesso canale vocale del bot", self.red))
         except Exception as e:
-            await ctx.send(embed=self.embed("Si e' verificato un errore", self.red))
+            print(e.args)
+            # await ctx.send(embed=self.embed("Si e' verificato un errore", self.red))
+            await ctx.send(embed=self.embed(e.args, self.red))
             print(e.args)
 
     # Skip
@@ -177,11 +179,60 @@ class Susano(commands.Cog):
             await ctx.send(embed=self.embed("Il bot non e' presente nel canale vocale", self.red))
         except Exc.UserNonNelloStessoCanaleError:
             await ctx.send(embed=self.embed("Non sei connesso nello stesso canale vocale del bot", self.red))
-        except Exc.CodaVuota:
+        except Exc.CodaVuotaError:
             await ctx.send(embed=self.embed("La coda e' vuota", self.red))
         except Exception as e:
             await ctx.send(embed=self.embed("Si e' verificato un errore", self.red))
             print(e.args)
+
+    # Loop
+    @cog_ext.cog_slash(
+        name="loop",
+        description="Mette in loop la coda",
+        guild_ids=servers.getServers(),
+        options=[
+            create_option(
+                name="input",
+                description="Si o No",
+                option_type=4,
+                required=True,
+                choices=[
+                    create_choice(
+                        name="Si",
+                        value=1
+                    ),
+                    create_choice(
+                        name="No",
+                        value=0
+                    )
+                ]
+            )
+        ]
+    )
+    async def _loop(self, ctx: SlashContext, input: int):
+        if input:
+            input = True
+            text = "Si"
+        else:
+            input = False
+            text = "No"
+        try:
+            await self.voiceChannel.loop(ctx, input, self.coda)
+            await ctx.send(embed=self.embed("Loop: " + text, self.blue))
+        except Exc.UserNonConnessoError:
+            await ctx.send(embed=self.embed("Non sei connesso a nessun canale vocale", self.red))
+        except Exc.BotNonPresenteError:
+            await ctx.send(embed=self.embed("Il bot non e' presente nel canale vocale", self.red))
+        except Exc.UserNonNelloStessoCanaleError:
+            await ctx.send(embed=self.embed("Non sei connesso nello stesso canale vocale del bot", self.red))
+        except Exc.NessunaCanzoneError:
+            await ctx.send(embed=self.embed("Il bot non sta riproducendo nessuna canzone", self.red))
+        except Exc.LoopGiaImpostatoError:
+            await ctx.send(embed=self.embed("Loop gia' impostato su: " + text, self.red))
+        except Exception as e:
+            await ctx.send(embed=self.embed("Si e' verificato un errore", self.red))
+            print(e.args)
+
 
 
 def setup(bot) -> None:

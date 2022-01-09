@@ -1,5 +1,5 @@
 from. _Error import Error
 
 
-class CodaVuota(Error):
+class CodaVuotaError(Error):
     pass
